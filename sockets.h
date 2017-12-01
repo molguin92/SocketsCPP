@@ -7,7 +7,11 @@
 
 #include <glob.h>
 #include <string>
+
+#ifdef PROTOBUF_SUPPORT
 #include <google/protobuf/message.h>
+#endif
+
 #include <functional>
 #include <utility>
 #include <sys/socket.h>
@@ -52,7 +56,7 @@ namespace sockets
         {}
 
         Connection(const int fd, sockaddr* addr, SocketAPI api)
-        : fd(fd), addr(addr), socketAPI(std::move(api)), open(true)
+                : fd(fd), addr(addr), socketAPI(std::move(api)), open(true)
         {}
 
         ~Connection();
@@ -64,6 +68,7 @@ namespace sockets
         void recvBuffer(char* buf, size_t len);
         void Close();
 
+#ifdef PROTOBUF_SUPPORT
         /**
          * @brief Sends a protobuf message through the connection.
          * @param msg A Protocol Buffers message object.
@@ -75,6 +80,7 @@ namespace sockets
          * @param msg The Protocol Buffers message object where the incoming data should be stored.
          */
         void recvMessage(google::protobuf::Message& msg);
+#endif
 
         /**
          * @brief Allows to override the socket input-output operations used by this

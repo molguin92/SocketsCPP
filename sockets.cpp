@@ -13,8 +13,8 @@
 namespace sockets
 {
     UnixSocket::UnixSocket(std::string path)
-    : socket_path(std::move(path)),
-      socket_fd(socket(AF_UNIX, SOCK_SEQPACKET, 0))
+            : socket_path(std::move(path)),
+              socket_fd(socket(AF_UNIX, SOCK_SEQPACKET, 0))
     {
         CHECK_NE_S(-1, socket_fd) << "Could not open socket file descriptor. errno: " << strerror(errno);
 
@@ -144,6 +144,7 @@ namespace sockets
         }
     }
 
+#ifdef PROTOBUF_SUPPORT
     void Connection::sendMessage(const google::protobuf::Message& msg)
     {
         // dump message into a buffer and send it
@@ -171,6 +172,7 @@ namespace sockets
         msg.ParseFromArray(buf, len);
         delete buf;
     }
+#endif
 
     void Connection::Close()
     {
