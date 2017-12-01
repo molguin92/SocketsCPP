@@ -251,7 +251,7 @@ namespace sockets
             : TCPCommonSocket(port), address(std::move(address))
     {
         auto _addr = (sockaddr_in*) ISocket::getAddr();
-        _addr->sin_addr.s_addr = inet_addr(address.c_str());
+        _addr->sin_addr.s_addr = inet_addr(this->address.c_str());
         _addr->sin_port = htons(port);
     }
 
