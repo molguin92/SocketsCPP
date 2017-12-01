@@ -170,6 +170,22 @@ namespace sockets
         void BindAndListen() override;
         Connection AcceptConnection() override;
     };
+
+    class TCPSocket : protected ISocket
+    {
+    private:
+        int socket_fd;
+        const std::string socket_path;
+        SocketAPI socketAPI;
+    public:
+
+        explicit TCPSocket(std::string path);
+        ~TCPSocket() override;
+
+        Connection Connect() override;
+        void BindAndListen() override;
+        Connection AcceptConnection() override;
+    };
 };
 
 
