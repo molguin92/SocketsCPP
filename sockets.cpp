@@ -5,6 +5,10 @@
 #include <sys/un.h>
 #include "sockets.h"
 
+#ifndef LOGURU_IMPLEMENTATION
+#define LOGURU_IMPLEMENTATION 1
+#endif
+
 #define LOGURU_WITH_STREAMS 1
 
 #include <loguru/loguru.hpp>
