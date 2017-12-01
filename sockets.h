@@ -66,6 +66,7 @@ namespace sockets
         void sendBuffer(char* buf, size_t len);
         void recvBuffer(char* buf, size_t len);
         void Close();
+        bool isOpen();
 
 #ifdef PROTOBUF_SUPPORT
         /**

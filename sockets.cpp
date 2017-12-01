@@ -187,6 +187,11 @@ namespace sockets
         open = false;
     }
 
+    bool Connection::isOpen()
+    {
+        return open;
+    }
+
     TCPCommonSocket::TCPCommonSocket(uint16_t port) :
             socket_fd(socket(AF_INET, SOCK_STREAM, 0)), port(port)
     {
