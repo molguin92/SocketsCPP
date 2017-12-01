@@ -61,7 +61,6 @@ namespace sockets
 
         ~Connection();
 
-        void Open(int fd, sockaddr* addr);
         void sendInt32(int32_t var);
         void recvInt32(int32_t& var);
         void sendBuffer(char* buf, size_t len);

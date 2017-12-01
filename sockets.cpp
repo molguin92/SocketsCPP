@@ -180,14 +180,5 @@ namespace sockets
         close(fd);
         open = false;
     }
-
-    void Connection::Open(const int fd, sockaddr* addr)
-    {
-        CHECK_S(!open) << "Connection already open.";
-        this->fd = fd;
-        this->addr = addr;
-        open = true;
-    }
-
 }
 
