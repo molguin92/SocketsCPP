@@ -9,6 +9,8 @@
 
 #include <loguru/loguru.hpp>
 #include <zconf.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 namespace sockets
 {
@@ -180,5 +182,103 @@ namespace sockets
         close(fd);
         open = false;
     }
+
+    TCPCommonSocket::TCPCommonSocket(uint16_t port) :
+            socket_fd(socket(AF_INET, SOCK_STREAM, 0)), port(port)
+    {
+        CHECK_NE_S(-1, socket_fd) << "Could not open socket file descriptor. errno: " << strerror(errno);
+
+        auto _addr = new sockaddr_in{};
+        _addr->sin_family = AF_INET;
+        ISocket::setAddr((sockaddr*) _addr);
+
+        socketAPI.accept = accept;
+        socketAPI.connect = connect;
+        socketAPI.bind = bind;
+        socketAPI.listen = listen;
+
+        socketAPI.send = send;
+        socketAPI.recv = recv;
+
+        socketAPI.error_code = -1;
+    }
+
+    TCPCommonSocket::~TCPCommonSocket()
+    {
+        close(socket_fd);
+    }
+
+    TCPServerSocket::TCPServerSocket(uint16_t port)
+            : TCPCommonSocket(port)
+    {
+        auto _addr = (sockaddr_in*) ISocket::getAddr();
+        _addr->sin_addr.s_addr = INADDR_ANY;
+        _addr->sin_port = htons(port);
+    }
+
+    void TCPServerSocket::BindAndListen()
+    {
+        auto addr = ISocket::getAddr();
+
+        CHECK_NE_S(socketAPI.bind(socket_fd, addr, sizeof(sockaddr_in)), socketAPI.error_code)
+            << "Could not bind socket to port " << port << ", errno: " << strerror(errno);
+        CHECK_NE_S(socketAPI.listen(socket_fd, MAX_CONNECTION_BACKLOG), socketAPI.error_code)
+            << "Error when trying to listen on socket, errno: " << strerror(errno);
+        ISocket::setBound();
+    }
+
+    Connection TCPServerSocket::AcceptConnection()
+    {
+        auto* peer_addr = (sockaddr*) (new sockaddr_in{});
+        socklen_t len = sizeof(sockaddr_in);
+        int connection_fd = socketAPI.accept(socket_fd, peer_addr, &len);
+        CHECK_NE_S(connection_fd, socketAPI.error_code)
+            << "Could not accept incoming connection on port " << port << ", errno: " << strerror(errno);
+
+        return Connection(connection_fd, peer_addr, socketAPI);
+    }
+
+    Connection TCPServerSocket::Connect()
+    {
+        ABORT_S() << "Tried to call Connect() on a server socket. Use a client socket next time!";
+    }
+
+    TCPClientSocket::TCPClientSocket(std::string address, uint16_t port)
+            : TCPCommonSocket(port), address(std::move(address))
+    {
+        auto _addr = (sockaddr_in*) ISocket::getAddr();
+        _addr->sin_addr.s_addr = inet_addr(address.c_str());
+        _addr->sin_port = htons(port);
+    }
+
+    Connection TCPClientSocket::Connect()
+    {
+        CHECK_NE_S(socketAPI.connect(socket_fd, ISocket::getAddr(), sizeof(sockaddr_in)), socketAPI.error_code)
+            << "Could not connect to host " << address << ":" << port << ", errno: " << strerror(errno);
+
+        /*
+         * We need to copy the socket address to a new structure to pass to the connection since the destructor
+         * of the connection deletes its address - and we don't want to end up with a dangling pointer here,
+         * do we now?
+         */
+        auto _addr = ISocket::getAddr();
+        auto n_addr = (sockaddr*) malloc(sizeof(sockaddr));
+        memcpy(n_addr, _addr, sizeof(sockaddr));
+
+        return Connection(socket_fd, n_addr, socketAPI);
+    }
+
+    void TCPClientSocket::BindAndListen()
+    {
+        ABORT_S() << "Tried to call BindAndListen() on a client socket. Use a server socket next time!";
+    }
+
+    Connection TCPClientSocket::AcceptConnection()
+    {
+        ABORT_S() << "Tried to call AcceptConnection() on a client socket. Use a server socket next time!";
+        return Connection();
+    }
+
+
 }
 

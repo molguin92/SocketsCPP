@@ -171,17 +171,44 @@ namespace sockets
         Connection AcceptConnection() override;
     };
 
-    class TCPSocket : protected ISocket
+    class TCPCommonSocket : protected ISocket
     {
-    private:
+    protected:
         int socket_fd;
         SocketAPI socketAPI;
-    public:
+        uint16_t port;
 
-        TCPSocket();
-        ~TCPSocket() override;
+    protected:
+        explicit TCPCommonSocket(uint16_t port);
+        ~TCPCommonSocket() override;
+    };
+
+    class TCPServerSocket : protected TCPCommonSocket
+    {
+
+    public:
+        explicit TCPServerSocket(uint16_t port);
+        ~TCPServerSocket() override = default;
+
+        void BindAndListen() override;
+        Connection AcceptConnection() override;
+
+    private:
+        Connection Connect() override;
+    };
+
+    class TCPClientSocket : protected TCPCommonSocket
+    {
+    protected:
+        std::string address;
+
+    public:
+        TCPClientSocket(std::string address, uint16_t port);
+        ~TCPClientSocket() override = default;
 
         Connection Connect() override;
+
+    private:
         void BindAndListen() override;
         Connection AcceptConnection() override;
     };
