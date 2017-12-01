@@ -175,11 +175,10 @@ namespace sockets
     {
     private:
         int socket_fd;
-        const std::string socket_path;
         SocketAPI socketAPI;
     public:
 
-        explicit TCPSocket(std::string path);
+        TCPSocket();
         ~TCPSocket() override;
 
         Connection Connect() override;
