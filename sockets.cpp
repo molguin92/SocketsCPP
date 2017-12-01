@@ -104,6 +104,14 @@ namespace sockets
         {
             sent = socketAPI.send(fd, ((const char*) &var) + total_sent, sizeof(int32_t) - total_sent, 0);
             CHECK_NE_S(sent, -1) << "Error when trying to send int32, errno: " << strerror(errno);
+
+            if (sent == 0)
+            {
+                LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+                this->Close();
+                return;
+            }
+
             total_sent += sent;
         }
     }
@@ -118,6 +126,14 @@ namespace sockets
         {
             received = socketAPI.recv(fd, ((char*) &var) + total_received, sizeof(int32_t) - total_received, 0);
             CHECK_NE_S(received, -1) << "Error when trying to receive int32, errno: " << strerror(errno);
+
+            if (received == 0)
+            {
+                LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+                this->Close();
+                return;
+            }
+
             total_received += received;
         }
     }
@@ -132,6 +148,14 @@ namespace sockets
         {
             sent = socketAPI.send(fd, buf + total_sent, len - total_sent, 0);
             CHECK_NE_S(sent, -1) << "Error when trying to send buffer, errno : " << strerror(errno);
+
+            if (sent == 0)
+            {
+                LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+                this->Close();
+                return;
+            }
+
             total_sent += sent;
         }
     }
@@ -146,6 +170,14 @@ namespace sockets
         {
             rcvd = socketAPI.recv(fd, buf + total_rcvd, len - total_rcvd, 0);
             CHECK_NE_S(rcvd, -1) << "Error when trying to send buffer, errno : " << strerror(errno);
+
+            if (rcvd == 0)
+            {
+                LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+                this->Close();
+                return;
+            }
+
             total_rcvd += rcvd;
         }
     }
