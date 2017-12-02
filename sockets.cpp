@@ -5,7 +5,7 @@
 #include <sys/un.h>
 #include "sockets.h"
 
-#ifndef LOGURU_IMPLEMENTATION
+#ifdef COMP_LOGURU
 #define LOGURU_IMPLEMENTATION 1
 #endif
 
