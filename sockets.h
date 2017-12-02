@@ -61,10 +61,10 @@ namespace sockets
 
         ~Connection();
 
-        void sendInt32(int32_t var);
-        void recvInt32(int32_t& var);
-        void sendBuffer(char* buf, size_t len);
-        void recvBuffer(char* buf, size_t len);
+        int sendInt32(int32_t var);
+        int recvInt32(int32_t& var);
+        size_t sendBuffer(char* buf, size_t len);
+        size_t recvBuffer(char* buf, size_t len);
         void Close();
         bool isOpen();
 

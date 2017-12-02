@@ -93,7 +93,7 @@ namespace sockets
         delete addr;
     }
 
-    void Connection::sendInt32(int32_t var)
+    int Connection::sendInt32(int32_t var)
     {
         CHECK_S(open) << "Closed connection.";
 
@@ -109,14 +109,16 @@ namespace sockets
             {
                 LOG_S(INFO) << "Peer closed connection. Closing on this end.";
                 this->Close();
-                return;
+                return 0;
             }
 
             total_sent += sent;
         }
+
+        return total_sent;
     }
 
-    void Connection::recvInt32(int32_t& var)
+    int Connection::recvInt32(int32_t& var)
     {
         CHECK_S(open) << "Closed connection";
 
@@ -131,14 +133,16 @@ namespace sockets
             {
                 LOG_S(INFO) << "Peer closed connection. Closing on this end.";
                 this->Close();
-                return;
+                return 0;
             }
 
             total_received += received;
         }
+
+        return total_received;
     }
 
-    void Connection::sendBuffer(char* buf, size_t len)
+    size_t Connection::sendBuffer(char* buf, size_t len)
     {
         CHECK_S(open) << "Closed connection";
 
@@ -153,14 +157,16 @@ namespace sockets
             {
                 LOG_S(INFO) << "Peer closed connection. Closing on this end.";
                 this->Close();
-                return;
+                return 0;
             }
 
             total_sent += sent;
         }
+
+        return total_sent;
     }
 
-    void Connection::recvBuffer(char* buf, size_t len)
+    size_t Connection::recvBuffer(char* buf, size_t len)
     {
         CHECK_S(open) << "Closed connection";
 
@@ -175,14 +181,17 @@ namespace sockets
             {
                 LOG_S(INFO) << "Peer closed connection. Closing on this end.";
                 this->Close();
-                return;
+                return 0;
             }
 
             total_rcvd += rcvd;
         }
+
+        return total_rcvd;
     }
 
 #ifdef PROTOBUF_SUPPORT
+
     void Connection::sendMessage(const google::protobuf::Message& msg)
     {
         // dump message into a buffer and send it
@@ -194,8 +203,8 @@ namespace sockets
         msg.SerializeToArray(buf, len);
 
         // first send length, then serialized message
-        sendInt32(len);
-        sendBuffer(buf, static_cast<size_t>(len));
+        CHECK_GE_S(sendInt32(len), 0) << "Peer closed connection unexpectedly.";
+        CHECK_GE_S(sendBuffer(buf, static_cast<size_t>(len)), 0) << "Peer closed connection unexpectedly.";
         delete buf;
     }
 
@@ -205,11 +214,12 @@ namespace sockets
         int32_t len = 0;
         recvInt32(len);
         auto* buf = new char[len];
-        recvBuffer(buf, static_cast<size_t>(len));
+        CHECK_GE_S(recvBuffer(buf, static_cast<size_t>(len)), 0) << "Peer closed connection unexpectedly.";
 
         msg.ParseFromArray(buf, len);
         delete buf;
     }
+
 #endif
 
     void Connection::Close()
