@@ -3,7 +3,8 @@ project(SocketsCPP)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-if(NOT ${SOCKETS_EXTERNAL_LOGURU})
+if(${SOCKETS_EXTERNAL_LOGURU})
+else()
     add_definitions(-DCOMP_LOGURU)
 endif()
 
