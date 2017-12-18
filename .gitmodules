@@ -1,3 +1,0 @@
-#[submodule "include/loguru"]
-#	path = include/loguru
-#	url = git@github.com:emilk/loguru.git
