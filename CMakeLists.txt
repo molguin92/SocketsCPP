@@ -9,7 +9,7 @@ else()
 endif()
 
 
-set(COMPILE_PROTOBUF TRUE)
+set(COMPILE_PROTOBUF FALSE)
 if (${COMPILE_PROTOBUF})
     add_definitions(-DPROTOBUF_SUPPORT)
     find_package(Protobuf REQUIRED)
