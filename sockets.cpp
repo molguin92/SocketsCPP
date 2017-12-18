@@ -5,24 +5,31 @@
 #include <sys/un.h>
 #include "sockets.h"
 
+#ifdef LOGURU_SUPPORT
 #ifdef COMP_LOGURU
 #define LOGURU_IMPLEMENTATION 1
 #endif
 
 #define LOGURU_WITH_STREAMS 1
+#endif
 
 #include <loguru/loguru.hpp>
 #include <zconf.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <iostream>
 
 namespace sockets
 {
     UnixSocket::UnixSocket(std::string path)
-            : socket_path(std::move(path)),
-              socket_fd(socket(AF_UNIX, SOCK_SEQPACKET, 0))
+    : socket_path(std::move(path)),
+      socket_fd(socket(AF_UNIX, SOCK_SEQPACKET, 0))
     {
+#ifdef LOGURU_SUPPORT
         CHECK_NE_S(-1, socket_fd) << "Could not open socket file descriptor. errno: " << strerror(errno);
+#else
+        if (-1 == socket_fd) exit(errno);
+#endif
 
         auto* _addr = new sockaddr_un{};
         _addr->sun_family = AF_UNIX;
@@ -49,8 +56,12 @@ namespace sockets
 
     Connection UnixSocket::Connect()
     {
+#ifdef LOGURU_SUPPORT
         CHECK_NE_S(socketAPI.connect(socket_fd, ISocket::getAddr(), sizeof(sockaddr_un)), socketAPI.error_code)
             << "Could not connect to socket: " << socket_path << ", errno: " << strerror(errno);
+#else
+        if (socketAPI.error_code == socketAPI.connect(socket_fd, ISocket::getAddr(), sizeof(sockaddr_un))) exit(errno);
+#endif
 
         /*
          * We need to copy the socket address to a new structure to pass to the connection since the destructor
@@ -66,11 +77,17 @@ namespace sockets
 
     void UnixSocket::BindAndListen()
     {
+#ifdef LOGURU_SUPPORT
         CHECK_NE_S(socketAPI.bind(socket_fd, ISocket::getAddr(), sizeof(sockaddr_un)), socketAPI.error_code)
             << "Could not bind to socket: " << socket_path << ", errno: " << strerror(errno);
 
         CHECK_NE_S(socketAPI.listen(socket_fd, MAX_CONNECTION_BACKLOG), socketAPI.error_code)
             << "Could not listen on socket: " << socket_path << ", errno: " << strerror(errno);
+#else
+        if ((socketAPI.error_code == socketAPI.bind(socket_fd, ISocket::getAddr(), sizeof(sockaddr_un)))
+            || (socketAPI.error_code == socketAPI.listen(socket_fd, MAX_CONNECTION_BACKLOG)))
+            exit(errno);
+#endif
         ISocket::setBound();
     }
 
@@ -79,9 +96,13 @@ namespace sockets
         auto* peer_addr = (sockaddr*) (new sockaddr_un{});
         socklen_t len = sizeof(sockaddr_un);
         int connection_fd = socketAPI.accept(socket_fd, peer_addr, &len);
+#ifdef LOGURU_SUPPORT
         CHECK_NE_S(connection_fd, socketAPI.error_code)
-            << "Could not accept incoming connection on socket: "
-            << socket_path << ", errno: " << strerror(errno);
+        << "Could not accept incoming connection on socket: "
+        << socket_path << ", errno: " << strerror(errno);
+#else
+        if (connection_fd == socketAPI.error_code) exit(errno);
+#endif
 
         return Connection(connection_fd, peer_addr, socketAPI);
     }
@@ -95,7 +116,11 @@ namespace sockets
 
     int Connection::sendInt32(int32_t var)
     {
+#ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection.";
+#else
+        if (!open) exit(-1);
+#endif
 
         uint32_t total_sent = 0;
         ssize_t sent;
@@ -103,11 +128,17 @@ namespace sockets
         while (total_sent < sizeof(int32_t))
         {
             sent = socketAPI.send(fd, ((const char*) &var) + total_sent, sizeof(int32_t) - total_sent, 0);
+#ifdef LOGURU_SUPPORT
             CHECK_NE_S(sent, -1) << "Error when trying to send int32, errno: " << strerror(errno);
+#else
+            if (-1 == sent) exit(errno);
+#endif
 
             if (sent == 0)
             {
+#ifdef LOGURU_SUPPORT
                 LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+#endif
                 this->Close();
                 return 0;
             }
@@ -120,18 +151,28 @@ namespace sockets
 
     int Connection::recvInt32(int32_t& var)
     {
+#ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection";
+#else
+        if (!open) exit(-1);
+#endif
 
         uint32_t total_received = 0;
         ssize_t received;
         while (total_received < sizeof(int32_t))
         {
             received = socketAPI.recv(fd, ((char*) &var) + total_received, sizeof(int32_t) - total_received, 0);
+#ifdef LOGURU_SUPPORT
             CHECK_NE_S(received, -1) << "Error when trying to receive int32, errno: " << strerror(errno);
+#else
+            if (-1 == received) exit(errno);
+#endif
 
             if (received == 0)
             {
+#ifdef LOGURU_SUPPORT
                 LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+#endif
                 this->Close();
                 return 0;
             }
@@ -144,18 +185,28 @@ namespace sockets
 
     size_t Connection::sendBuffer(char* buf, size_t len)
     {
+#ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection";
+#else
+        if (!open) exit(-1);
+#endif
 
         size_t total_sent = 0;
         ssize_t sent;
         while (total_sent < len)
         {
             sent = socketAPI.send(fd, buf + total_sent, len - total_sent, 0);
+#ifdef LOGURU_SUPPORT
             CHECK_NE_S(sent, -1) << "Error when trying to send buffer, errno : " << strerror(errno);
+#else
+            if (-1 == sent) exit(errno);
+#endif
 
             if (sent == 0)
             {
+#ifdef LOGURU_SUPPORT
                 LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+#endif
                 this->Close();
                 return 0;
             }
@@ -168,18 +219,28 @@ namespace sockets
 
     size_t Connection::recvBuffer(char* buf, size_t len)
     {
+#ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection";
+#else
+        if (!open) exit(-1);
+#endif
 
         size_t total_rcvd = 0;
         ssize_t rcvd;
         while (total_rcvd < len)
         {
             rcvd = socketAPI.recv(fd, buf + total_rcvd, len - total_rcvd, 0);
+#ifdef LOGURU_SUPPORT
             CHECK_NE_S(rcvd, -1) << "Error when trying to send buffer, errno : " << strerror(errno);
+#else
+            if (-1 == rcvd) exit(errno);
+#endif
 
             if (rcvd == 0)
             {
+#ifdef LOGURU_SUPPORT
                 LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+#endif
                 this->Close();
                 return 0;
             }
@@ -203,8 +264,16 @@ namespace sockets
         msg.SerializeToArray(buf, len);
 
         // first send length, then serialized message
+#ifdef LOGURU_SUPPORT
         CHECK_GE_S(sendInt32(len), 0) << "Peer closed connection unexpectedly.";
         CHECK_GE_S(sendBuffer(buf, static_cast<size_t>(len)), 0) << "Peer closed connection unexpectedly.";
+#else
+        if ((0 < sendInt32(len)) || (0 < sendBuffer(buf, static_cast<size_t>(len))))
+        {
+            std::cerr << "Peer closed connection unexpectedly." << std::endl;
+            exit(-1);
+        }
+#endif
         delete buf;
     }
 
@@ -214,7 +283,15 @@ namespace sockets
         int32_t len = 0;
         recvInt32(len);
         auto* buf = new char[len];
+#ifdef LOGURU_SUPPORT
         CHECK_GE_S(recvBuffer(buf, static_cast<size_t>(len)), 0) << "Peer closed connection unexpectedly.";
+#else
+        if(0 < recvBuffer(buf, static_cast<size_t>(len)))
+        {
+            std::cerr << "Peer closed connection unexpectedly." << std::endl;
+            exit(-1);
+        }
+#endif
 
         msg.ParseFromArray(buf, len);
         delete buf;
@@ -235,9 +312,13 @@ namespace sockets
     }
 
     TCPCommonSocket::TCPCommonSocket(uint16_t port) :
-            socket_fd(socket(AF_INET, SOCK_STREAM, 0)), port(port)
+    socket_fd(socket(AF_INET, SOCK_STREAM, 0)), port(port)
     {
+#ifdef LOGURU_SUPPORT
         CHECK_NE_S(-1, socket_fd) << "Could not open socket file descriptor. errno: " << strerror(errno);
+#else
+        if (-1 == socket_fd) exit(errno);
+#endif
 
         auto _addr = new sockaddr_in{};
         _addr->sin_family = AF_INET;
@@ -260,7 +341,7 @@ namespace sockets
     }
 
     TCPServerSocket::TCPServerSocket(uint16_t port)
-            : TCPCommonSocket(port)
+    : TCPCommonSocket(port)
     {
         auto _addr = (sockaddr_in*) ISocket::getAddr();
         _addr->sin_addr.s_addr = INADDR_ANY;
@@ -271,10 +352,16 @@ namespace sockets
     {
         auto addr = ISocket::getAddr();
 
+#ifdef LOGURU_SUPPORT
         CHECK_NE_S(socketAPI.bind(socket_fd, addr, sizeof(sockaddr_in)), socketAPI.error_code)
-            << "Could not bind socket to port " << port << ", errno: " << strerror(errno);
+        << "Could not bind socket to port " << port << ", errno: " << strerror(errno);
         CHECK_NE_S(socketAPI.listen(socket_fd, MAX_CONNECTION_BACKLOG), socketAPI.error_code)
-            << "Error when trying to listen on socket, errno: " << strerror(errno);
+        << "Error when trying to listen on socket, errno: " << strerror(errno);
+#else
+        if ((socketAPI.error_code == socketAPI.bind(socket_fd, addr, sizeof(sockaddr_in)))
+            || (socketAPI.error_code == socketAPI.listen(socket_fd, MAX_CONNECTION_BACKLOG)))
+            exit(errno);
+#endif
         ISocket::setBound();
     }
 
@@ -283,19 +370,28 @@ namespace sockets
         auto* peer_addr = (sockaddr*) (new sockaddr_in{});
         socklen_t len = sizeof(sockaddr_in);
         int connection_fd = socketAPI.accept(socket_fd, peer_addr, &len);
+#ifdef LOGURU_SUPPORT
         CHECK_NE_S(connection_fd, socketAPI.error_code)
-            << "Could not accept incoming connection on port " << port << ", errno: " << strerror(errno);
+        << "Could not accept incoming connection on port " << port << ", errno: " << strerror(errno);
+#else
+        if (socketAPI.error_code == connection_fd) exit(errno);
+#endif
 
         return Connection(connection_fd, peer_addr, socketAPI);
     }
 
     Connection TCPServerSocket::Connect()
     {
+#ifdef LOGURU_SUPPORT
         ABORT_S() << "Tried to call Connect() on a server socket. Use a client socket next time!";
+#else
+        std::cerr << "Tried to call Connect() on a server socket. Use a client socket next time!" << std::endl;
+        exit(-1);
+#endif
     }
 
     TCPClientSocket::TCPClientSocket(std::string address, uint16_t port)
-            : TCPCommonSocket(port), address(std::move(address))
+    : TCPCommonSocket(port), address(std::move(address))
     {
         auto _addr = (sockaddr_in*) ISocket::getAddr();
         _addr->sin_addr.s_addr = inet_addr(this->address.c_str());
@@ -304,8 +400,12 @@ namespace sockets
 
     Connection TCPClientSocket::Connect()
     {
+#ifdef LOGURU_SUPPORT
         CHECK_NE_S(socketAPI.connect(socket_fd, ISocket::getAddr(), sizeof(sockaddr_in)), socketAPI.error_code)
-            << "Could not connect to host " << address << ":" << port << ", errno: " << strerror(errno);
+        << "Could not connect to host " << address << ":" << port << ", errno: " << strerror(errno);
+#else
+        if (socketAPI.error_code == socketAPI.connect(socket_fd, ISocket::getAddr(), sizeof(sockaddr_in))) exit(errno);
+#endif
 
         /*
          * We need to copy the socket address to a new structure to pass to the connection since the destructor
@@ -321,13 +421,23 @@ namespace sockets
 
     void TCPClientSocket::BindAndListen()
     {
+#ifdef LOGURU_SUPPORT
         ABORT_S() << "Tried to call BindAndListen() on a client socket. Use a server socket next time!";
+#else
+        std::cerr << "Tried to call BindAndListen() on a client socket. Use a server socket next time!" << std::endl;
+        exit(-1);
+#endif
     }
 
     Connection TCPClientSocket::AcceptConnection()
     {
+#ifdef LOGURU_SUPPORT
         ABORT_S() << "Tried to call AcceptConnection() on a client socket. Use a server socket next time!";
+#else
+        std::cerr << "Tried to call AcceptConnection() on a client socket. Use a server socket next time!" << std::endl;
+        exit(-1);
         return Connection();
+#endif
     }
 
 
