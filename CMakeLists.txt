@@ -54,7 +54,7 @@ endif ()
 
 if (${COMPILE_PROTOBUF})
     if (${COMPILE_LOGURU})
-        target_link_libraries(socketscpp dl ${CMAKE_THREADS_LIB_INIT} ${PROTOBUF_LIBRARY})
+        target_link_libraries(socketscpp dl ${CMAKE_THREAD_LIBS_INIT} ${PROTOBUF_LIBRARY})
     else ()
         target_link_libraries(socketscpp dl ${PROTOBUF_LIBRARY})
     endif ()
