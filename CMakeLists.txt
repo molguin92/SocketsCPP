@@ -62,9 +62,9 @@ if (${COMPILE_PROTOBUF})
 endif ()
 
 install(TARGETS SocketsCPP
-        EXPORT LibSocketsCPP
+        # EXPORT LibSocketsCPP
         ARCHIVE DESTINATION lib
         LIBRARY DESTINATION lib
         PUBLIC_HEADER DESTINATION include/socketscpp)
-export(TARGETS SocketsCPP FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config.cmake)
-export(PACKAGE ${PROJECT_NAME})
+# export(TARGETS SocketsCPP FILE ${CMAKE_BINARY_DIR}/${PROJECT_NAME}-config.cmake)
+# export(PACKAGE ${PROJECT_NAME})
