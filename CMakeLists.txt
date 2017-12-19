@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.9)
-project(SocketsCPP)
-set(CMAKE_CXX_STANDARD 11)
+project(SocketsCPP VERSION 0.5.0 DESCRIPTION "OOP wrapper around C socket API.")
+set(CMAKE_CXX_STANDARD 14)
 
 include(ExternalProject)
 find_package(Threads)
 
-set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
+#set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+#set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
 if (${SOCKETS_EXTERNAL_LOGURU})
 else ()
@@ -37,7 +37,17 @@ endif ()
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(SRC sockets.cpp sockets.h)
-add_library(SocketsCPP ${SRC})
+
+if (${STATIC_SOCKETSCPP})
+    add_library(SocketsCPP STATIC ${SRC})
+else ()
+    add_library(SocketsCPP SHARED ${SRC})
+endif ()
+
+set_target_properties(SocketsCPP PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION 1
+        PUBLIC_HEADER sockets.h)
 
 if (${COMPILE_LOGURU})
     add_dependencies(SocketsCPP loguru)
@@ -50,3 +60,8 @@ if (${COMPILE_PROTOBUF})
         target_link_libraries(SocketsCPP dl ${PROTOBUF_LIBRARY})
     endif ()
 endif ()
+
+install(TARGETS SocketsCPP
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        PUBLIC_HEADER DESTINATION include/socketscpp)
