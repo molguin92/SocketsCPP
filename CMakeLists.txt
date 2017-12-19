@@ -46,7 +46,7 @@ endif ()
 
 set_target_properties(SocketsCPP PROPERTIES
         VERSION ${PROJECT_VERSION}
-        SOVERSION 1
+        # SOVERSION 1
         PUBLIC_HEADER sockets.h)
 
 if (${COMPILE_LOGURU})
