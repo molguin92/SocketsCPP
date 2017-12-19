@@ -11,9 +11,10 @@
 #endif
 
 #define LOGURU_WITH_STREAMS 1
-#endif
 
 #include <loguru/loguru.hpp>
+#endif
+
 #include <zconf.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
