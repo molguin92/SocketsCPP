@@ -20,7 +20,7 @@
 #include <arpa/inet.h>
 #include <iostream>
 
-namespace sockets
+namespace socketscpp
 {
     UnixSocket::UnixSocket(std::string path)
     : socket_path(std::move(path)),

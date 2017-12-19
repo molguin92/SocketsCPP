@@ -18,7 +18,7 @@
 
 #define MAX_CONNECTION_BACKLOG 128
 
-namespace sockets
+namespace socketscpp
 {
 /**
  * @brief Defines an abstraction for the operations of sockets.
