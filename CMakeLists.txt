@@ -8,11 +8,6 @@ find_package(Threads)
 #set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
-if (${SOCKETS_EXTERNAL_LOGURU})
-else ()
-    add_definitions(-DCOMP_LOGURU)
-endif ()
-
 #set(COMPILE_PROTOBUF FALSE)
 if (${COMPILE_PROTOBUF})
     add_definitions(-DPROTOBUF_SUPPORT)
@@ -21,6 +16,10 @@ endif ()
 
 #set(COMPILE_LOGURU FALSE)
 if (${COMPILE_LOGURU})
+    if (${SOCKETS_EXTERNAL_LOGURU})
+    else ()
+        add_definitions(-DCOMP_LOGURU)
+    endif ()
     # loguru
     add_definitions(-DLOGURU_SUPPORT)
     set(LOGURU_ROOT ${PROJECT_SOURCE_DIR}/include/loguru)
