@@ -56,13 +56,20 @@ namespace socketscpp
         {}
 
         Connection(const int fd, sockaddr* addr, SocketAPI api)
-                : fd(fd), addr(addr), socketAPI(std::move(api)), open(true)
+        : fd(fd), addr(addr), socketAPI(std::move(api)), open(true)
         {}
 
         ~Connection();
 
-        int sendInt32(int32_t var);
-        int recvInt32(int32_t& var);
+        // int sendInt32(int32_t var);
+        // int recvInt32(int32_t& var);
+
+        template<typename Prim_T>
+        int sendPrimType(Prim_T var);
+
+        template<typename Prim_T>
+        int recvPrimType(Prim_T& var);
+
         size_t sendBuffer(char* buf, size_t len);
         size_t recvBuffer(char* buf, size_t len);
         void Close();

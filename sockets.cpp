@@ -115,6 +115,8 @@ namespace socketscpp
         delete addr;
     }
 
+/*
+
     int Connection::sendInt32(int32_t var)
     {
 #ifdef LOGURU_SUPPORT
@@ -165,6 +167,78 @@ namespace socketscpp
             received = socketAPI.recv(fd, ((char*) &var) + total_received, sizeof(int32_t) - total_received, 0);
 #ifdef LOGURU_SUPPORT
             CHECK_NE_S(received, -1) << "Error when trying to receive int32, errno: " << strerror(errno);
+#else
+            if (-1 == received) exit(errno);
+#endif
+
+            if (received == 0)
+            {
+#ifdef LOGURU_SUPPORT
+                LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+#endif
+                this->Close();
+                return 0;
+            }
+
+            total_received += received;
+        }
+
+        return total_received;
+    }
+*/
+
+    template<typename Prim_T>
+    int Connection::sendPrimType(const Prim_T var)
+    {
+#ifdef LOGURU_SUPPORT
+        CHECK_S(open) << "Closed connection.";
+#else
+        if (!open) exit(-1);
+#endif
+
+        uint32_t total_sent = 0;
+        ssize_t sent;
+
+        while (total_sent < sizeof(Prim_T))
+        {
+            sent = socketAPI.send(fd, ((const char*) &var) + total_sent, sizeof(Prim_T) - total_sent, 0);
+#ifdef LOGURU_SUPPORT
+            CHECK_NE_S(sent, -1) << "Error when trying to send primitive type, errno: " << strerror(errno);
+#else
+            if (-1 == sent) exit(errno);
+#endif
+
+            if (sent == 0)
+            {
+#ifdef LOGURU_SUPPORT
+                LOG_S(INFO) << "Peer closed connection. Closing on this end.";
+#endif
+                this->Close();
+                return 0;
+            }
+
+            total_sent += sent;
+        }
+
+        return total_sent;
+    }
+
+    template<typename Prim_T>
+    int Connection::recvPrimType(Prim_T& var)
+    {
+#ifdef LOGURU_SUPPORT
+        CHECK_S(open) << "Closed connection";
+#else
+        if (!open) exit(-1);
+#endif
+
+        uint32_t total_received = 0;
+        ssize_t received;
+        while (total_received < sizeof(Prim_T))
+        {
+            received = socketAPI.recv(fd, ((char*) &var) + total_received, sizeof(Prim_T) - total_received, 0);
+#ifdef LOGURU_SUPPORT
+            CHECK_NE_S(received, -1) << "Error when trying to receive primitive type, errno: " << strerror(errno);
 #else
             if (-1 == received) exit(errno);
 #endif
