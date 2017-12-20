@@ -10,12 +10,16 @@ find_package(Threads)
 
 #set(COMPILE_PROTOBUF FALSE)
 if (${COMPILE_PROTOBUF})
+    message("SocketsCPP: Google Protobuf support ENABLED")
     add_definitions(-DPROTOBUF_SUPPORT)
     find_package(Protobuf REQUIRED)
+else ()
+    message("SocketsCPP: Google Protobuf support DISABLED")
 endif ()
 
 #set(COMPILE_LOGURU FALSE)
 if (${COMPILE_LOGURU})
+    message("SocketsCPP: Loguru support ENABLED")
     if (${SOCKETS_EXTERNAL_LOGURU})
     else ()
         add_definitions(-DCOMP_LOGURU)
@@ -32,14 +36,18 @@ if (${COMPILE_LOGURU})
             CONFIGURE_COMMAND ""
             BUILD_COMMAND ""
             INSTALL_COMMAND "")
+else ()
+    message("SocketsCPP: Loguru support DISABLED")
 endif ()
 include_directories(${PROJECT_SOURCE_DIR}/include)
 
 set(SRC sockets.cpp sockets.h)
 
 if (${STATIC_SOCKETSCPP})
+    message("SocketsCPP: Compiling as statically linked library.")
     add_library(socketscpp STATIC ${SRC})
 else ()
+    message("SocketsCPP: Compiling as dynamically linked library.")
     add_library(socketscpp SHARED ${SRC})
 endif ()
 
