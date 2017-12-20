@@ -258,6 +258,17 @@ namespace socketscpp
         return total_received;
     }
 
+    template int Connection::sendPrimType<int>(int var);
+    template int Connection::recvPrimType<int>(int& var);
+    template int Connection::sendPrimType<float>(float var);
+    template int Connection::recvPrimType<float>(float& var);
+    template int Connection::sendPrimType<char>(char var);
+    template int Connection::recvPrimType<char>(char& var);
+    template int Connection::sendPrimType<double>(double var);
+    template int Connection::recvPrimType<double>(double& var);
+    template int Connection::sendPrimType<long>(long var);
+    template int Connection::recvPrimType<long>(long& var);
+
     size_t Connection::sendBuffer(char* buf, size_t len)
     {
 #ifdef LOGURU_SUPPORT
@@ -514,7 +525,5 @@ namespace socketscpp
         return Connection();
 #endif
     }
-
-
 }
 
