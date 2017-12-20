@@ -188,7 +188,7 @@ namespace socketscpp
 */
 
     template<typename Prim_T>
-    int Connection::sendPrimType(const Prim_T var)
+    int Connection::sendPrimitive(const Prim_T var)
     {
 #ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection.";
@@ -224,7 +224,7 @@ namespace socketscpp
     }
 
     template<typename Prim_T>
-    int Connection::recvPrimType(Prim_T& var)
+    int Connection::recvPrimitive(Prim_T& var)
     {
 #ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection";
@@ -258,16 +258,16 @@ namespace socketscpp
         return total_received;
     }
 
-    template int Connection::sendPrimType<int>(int var);
-    template int Connection::recvPrimType<int>(int& var);
-    template int Connection::sendPrimType<float>(float var);
-    template int Connection::recvPrimType<float>(float& var);
-    template int Connection::sendPrimType<char>(char var);
-    template int Connection::recvPrimType<char>(char& var);
-    template int Connection::sendPrimType<double>(double var);
-    template int Connection::recvPrimType<double>(double& var);
-    template int Connection::sendPrimType<long>(long var);
-    template int Connection::recvPrimType<long>(long& var);
+    template int Connection::sendPrimitive<int>(int var);
+    template int Connection::recvPrimitive<int>(int& var);
+    template int Connection::sendPrimitive<float>(float var);
+    template int Connection::recvPrimitive<float>(float& var);
+    template int Connection::sendPrimitive<char>(char var);
+    template int Connection::recvPrimitive<char>(char& var);
+    template int Connection::sendPrimitive<double>(double var);
+    template int Connection::recvPrimitive<double>(double& var);
+    template int Connection::sendPrimitive<long>(long var);
+    template int Connection::recvPrimitive<long>(long& var);
 
     size_t Connection::sendBuffer(char* buf, size_t len)
     {
