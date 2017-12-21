@@ -115,9 +115,9 @@ namespace socketscpp
         delete addr;
     }
 
-/*
 
-    int Connection::sendInt32(int32_t var)
+    template<typename IntType>
+    int Connection::sendInteger(const IntType var)
     {
 #ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection.";
@@ -125,14 +125,31 @@ namespace socketscpp
         if (!open) exit(-1);
 #endif
 
+        IntType data;
         uint32_t total_sent = 0;
         ssize_t sent;
 
-        while (total_sent < sizeof(int32_t))
+        size_t len = sizeof(IntType);
+        if (len > sizeof(uint8_t))
         {
-            sent = socketAPI.send(fd, ((const char*) &var) + total_sent, sizeof(int32_t) - total_sent, 0);
+            // if sending more than 1 byte
+            // reverse endianness
+            if (len == sizeof(uint16_t))
+                data = htobe16(var);
+            else if (len == sizeof(uint32_t))
+                data = htobe32(var);
+            else if (len == sizeof(uint64_t))
+                data = htobe64(var);
+        }
+        else
+            data = var;
+
+
+        while (total_sent < sizeof(IntType))
+        {
+            sent = socketAPI.send(fd, ((const char*) &data) + total_sent, sizeof(IntType) - total_sent, 0);
 #ifdef LOGURU_SUPPORT
-            CHECK_NE_S(sent, -1) << "Error when trying to send int32, errno: " << strerror(errno);
+            CHECK_NE_S(sent, -1) << "Error when trying to send integer, errno: " << strerror(errno);
 #else
             if (-1 == sent) exit(errno);
 #endif
@@ -152,7 +169,8 @@ namespace socketscpp
         return total_sent;
     }
 
-    int Connection::recvInt32(int32_t& var)
+    template<typename IntType>
+    int Connection::recvInteger(IntType& var)
     {
 #ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection";
@@ -162,81 +180,11 @@ namespace socketscpp
 
         uint32_t total_received = 0;
         ssize_t received;
-        while (total_received < sizeof(int32_t))
+        IntType data;
+
+        while (total_received < sizeof(IntType))
         {
-            received = socketAPI.recv(fd, ((char*) &var) + total_received, sizeof(int32_t) - total_received, 0);
-#ifdef LOGURU_SUPPORT
-            CHECK_NE_S(received, -1) << "Error when trying to receive int32, errno: " << strerror(errno);
-#else
-            if (-1 == received) exit(errno);
-#endif
-
-            if (received == 0)
-            {
-#ifdef LOGURU_SUPPORT
-                LOG_S(INFO) << "Peer closed connection. Closing on this end.";
-#endif
-                this->Close();
-                return 0;
-            }
-
-            total_received += received;
-        }
-
-        return total_received;
-    }
-*/
-
-    template<typename Prim_T>
-    int Connection::sendPrimitive(const Prim_T var)
-    {
-#ifdef LOGURU_SUPPORT
-        CHECK_S(open) << "Closed connection.";
-#else
-        if (!open) exit(-1);
-#endif
-
-        uint32_t total_sent = 0;
-        ssize_t sent;
-
-        while (total_sent < sizeof(Prim_T))
-        {
-            sent = socketAPI.send(fd, ((const char*) &var) + total_sent, sizeof(Prim_T) - total_sent, 0);
-#ifdef LOGURU_SUPPORT
-            CHECK_NE_S(sent, -1) << "Error when trying to send primitive type, errno: " << strerror(errno);
-#else
-            if (-1 == sent) exit(errno);
-#endif
-
-            if (sent == 0)
-            {
-#ifdef LOGURU_SUPPORT
-                LOG_S(INFO) << "Peer closed connection. Closing on this end.";
-#endif
-                this->Close();
-                return 0;
-            }
-
-            total_sent += sent;
-        }
-
-        return total_sent;
-    }
-
-    template<typename Prim_T>
-    int Connection::recvPrimitive(Prim_T& var)
-    {
-#ifdef LOGURU_SUPPORT
-        CHECK_S(open) << "Closed connection";
-#else
-        if (!open) exit(-1);
-#endif
-
-        uint32_t total_received = 0;
-        ssize_t received;
-        while (total_received < sizeof(Prim_T))
-        {
-            received = socketAPI.recv(fd, ((char*) &var) + total_received, sizeof(Prim_T) - total_received, 0);
+            received = socketAPI.recv(fd, ((char*) &data) + total_received, sizeof(IntType) - total_received, 0);
 #ifdef LOGURU_SUPPORT
             CHECK_NE_S(received, -1) << "Error when trying to receive primitive type, errno: " << strerror(errno);
 #else
@@ -255,19 +203,46 @@ namespace socketscpp
             total_received += received;
         }
 
+        size_t len = sizeof(IntType);
+        if (len > sizeof(uint8_t))
+        {
+            // if receiving more than 1 byte
+            // reverse endianness
+            if (len == sizeof(uint16_t))
+                var = be16toh(data);
+            else if (len == sizeof(uint32_t))
+                var = be32toh(data);
+            else if (len == sizeof(uint64_t))
+                var = be64toh(data);
+        }
+        else
+            var = data;
+
         return total_received;
     }
 
-    template int Connection::sendPrimitive<int>(int var);
-    template int Connection::recvPrimitive<int>(int& var);
-    template int Connection::sendPrimitive<float>(float var);
-    template int Connection::recvPrimitive<float>(float& var);
-    template int Connection::sendPrimitive<char>(char var);
-    template int Connection::recvPrimitive<char>(char& var);
-    template int Connection::sendPrimitive<double>(double var);
-    template int Connection::recvPrimitive<double>(double& var);
-    template int Connection::sendPrimitive<long>(long var);
-    template int Connection::recvPrimitive<long>(long& var);
+    /* unsigned integers */
+    template int Connection::sendInteger<uint8_t>(uint8_t var);
+    template int Connection::recvInteger<uint8_t>(uint8_t& var);
+    template int Connection::sendInteger<uint16_t>(uint16_t var);
+    template int Connection::recvInteger<uint16_t>(uint16_t& var);
+    template int Connection::sendInteger<uint32_t>(uint32_t var);
+    template int Connection::recvInteger<uint32_t>(uint32_t& var);
+    template int Connection::sendInteger<uint64_t>(uint64_t var);
+    template int Connection::recvInteger<uint64_t>(uint64_t& var);
+
+    /* signed integers */
+    template int Connection::sendInteger<int8_t>(int8_t var);
+    template int Connection::recvInteger<int8_t>(int8_t& var);
+    template int Connection::sendInteger<int16_t>(int16_t var);
+    template int Connection::recvInteger<int16_t>(int16_t& var);
+    template int Connection::sendInteger<int32_t>(int32_t var);
+    template int Connection::recvInteger<int32_t>(int32_t& var);
+    template int Connection::sendInteger<int64_t>(int64_t var);
+    template int Connection::recvInteger<int64_t>(int64_t& var);
+
+    /* floating point numbers */
+
 
     size_t Connection::sendBuffer(char* buf, size_t len)
     {
