@@ -119,11 +119,13 @@ namespace socketscpp
     template<typename PrimType>
     int Connection::sendPrimitive(const PrimType var)
     {
+        if (!open)
+        {
 #ifdef LOGURU_SUPPORT
-        CHECK_S(open) << "Closed connection.";
-#else
-        if (!open) exit(-1);
+            LOG_S(WARNING) << "Closed connection.";
 #endif
+            return 0;
+        }
 
         PrimType data;
         uint32_t total_sent = 0;
@@ -172,11 +174,13 @@ namespace socketscpp
     template<typename PrimType>
     int Connection::recvPrimitive(PrimType& var)
     {
+        if (!open)
+        {
 #ifdef LOGURU_SUPPORT
-        CHECK_S(open) << "Closed connection";
-#else
-        if (!open) exit(-1);
+            LOG_S(WARNING) << "Closed connection.";
 #endif
+            return 0;
+        }
 
         uint32_t total_received = 0;
         ssize_t received;
@@ -248,14 +252,15 @@ namespace socketscpp
     template int Connection::recvPrimitive<double>(double& var);
 
 
-
     size_t Connection::sendBuffer(char* buf, size_t len)
     {
+        if (!open)
+        {
 #ifdef LOGURU_SUPPORT
-        CHECK_S(open) << "Closed connection";
-#else
-        if (!open) exit(-1);
+            LOG_S(WARNING) << "Closed connection.";
 #endif
+            return 0;
+        }
 
         size_t total_sent = 0;
         ssize_t sent;
@@ -285,11 +290,13 @@ namespace socketscpp
 
     size_t Connection::recvBuffer(char* buf, size_t len)
     {
+        if (!open)
+        {
 #ifdef LOGURU_SUPPORT
-        CHECK_S(open) << "Closed connection";
-#else
-        if (!open) exit(-1);
+            LOG_S(WARNING) << "Closed connection.";
 #endif
+            return 0;
+        }
 
         size_t total_rcvd = 0;
         ssize_t rcvd;
