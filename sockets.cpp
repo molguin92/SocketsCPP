@@ -222,7 +222,7 @@ namespace socketscpp
             else if (len == sizeof(uint32_t))
                 *var = (PrimType) be32toh((uint32_t) data);
             else if (len == sizeof(uint64_t))
-                *var = (PrimType) be64toh((uint32_t) data);
+                *var = (PrimType) be64toh((uint64_t) data);
         }
         else
             *var = data;
