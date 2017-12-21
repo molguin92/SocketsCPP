@@ -393,8 +393,8 @@ namespace socketscpp
         if (-1 == socket_fd) exit(errno);
 #endif
         // socket options for reuse:
-        char set_opt = 1;
-        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, &set_opt, sizeof(set_opt));
+        int set_opt = 1;
+        setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, (char*) &set_opt, sizeof(int));
 
         auto _addr = new sockaddr_in{};
         _addr->sin_family = AF_INET;
