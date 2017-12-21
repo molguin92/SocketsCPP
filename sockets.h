@@ -2,6 +2,9 @@
 // Created by molguin on 2017-10-27.
 //
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedStructInspection"
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #ifndef MIGRATIONORCHESTRATOR_SOCKETS_H
 #define MIGRATIONORCHESTRATOR_SOCKETS_H
 
@@ -26,7 +29,7 @@ namespace socketscpp
  */
     struct SocketAPI
     {
-        int error_code;
+        int error_code = -1;
 
         std::function<int(int, const sockaddr*, socklen_t)> connect;
         std::function<int(int, const sockaddr*, socklen_t)> bind;
@@ -61,14 +64,11 @@ namespace socketscpp
 
         ~Connection();
 
-        // int sendInt32(int32_t var);
-        // int recvInt32(int32_t& var);
+        template<typename Prim_Type>
+        int sendPrimitive(Prim_Type var);
 
-        template<typename Prim_T>
-        int sendPrimitive(Prim_T var);
-
-        template<typename Prim_T>
-        int recvPrimitive(Prim_T& var);
+        template<typename Prim_Type>
+        int recvPrimitive(Prim_Type* var);
 
         size_t sendBuffer(char* buf, size_t len);
         size_t recvBuffer(char* buf, size_t len);
@@ -224,3 +224,5 @@ namespace socketscpp
 
 
 #endif //MIGRATIONORCHESTRATOR_SOCKETS_H
+
+#pragma clang diagnostic pop

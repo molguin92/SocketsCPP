@@ -5,6 +5,8 @@
 #include <sys/un.h>
 #include "sockets.h"
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCUnusedGlobalDeclarationInspection"
 #ifdef LOGURU_SUPPORT
 #ifdef COMP_LOGURU
 #define LOGURU_IMPLEMENTATION 1
@@ -35,7 +37,10 @@ namespace socketscpp
         auto* _addr = new sockaddr_un{};
         _addr->sun_family = AF_UNIX;
         strncpy(_addr->sun_path, socket_path.c_str(), sizeof(_addr->sun_path) - 1);
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCDFAInspection"
         ISocket::setAddr((sockaddr*) _addr);
+#pragma clang diagnostic pop
 
         socketAPI.accept = accept;
         socketAPI.connect = connect;
@@ -172,7 +177,7 @@ namespace socketscpp
     }
 
     template<typename PrimType>
-    int Connection::recvPrimitive(PrimType& var)
+    int Connection::recvPrimitive(PrimType* var)
     {
         if (!open)
         {
@@ -213,43 +218,44 @@ namespace socketscpp
             // if receiving more than 1 byte
             // reverse endianness
             if (len == sizeof(uint16_t))
-                var = (PrimType) be16toh((uint16_t) data);
+                *var = (PrimType) be16toh((uint16_t) data);
             else if (len == sizeof(uint32_t))
-                var = (PrimType) be32toh((uint32_t) data);
+                *var = (PrimType) be32toh((uint32_t) data);
             else if (len == sizeof(uint64_t))
-                var = (PrimType) be64toh((uint32_t) data);
+                *var = (PrimType) be64toh((uint32_t) data);
         }
         else
-            var = data;
+            *var = data;
 
         return total_received;
     }
 
+
     /* unsigned integers */
     template int Connection::sendPrimitive<uint8_t>(uint8_t var);
-    template int Connection::recvPrimitive<uint8_t>(uint8_t& var);
+    template int Connection::recvPrimitive<uint8_t>(uint8_t* var);
     template int Connection::sendPrimitive<uint16_t>(uint16_t var);
-    template int Connection::recvPrimitive<uint16_t>(uint16_t& var);
+    template int Connection::recvPrimitive<uint16_t>(uint16_t* var);
     template int Connection::sendPrimitive<uint32_t>(uint32_t var);
-    template int Connection::recvPrimitive<uint32_t>(uint32_t& var);
+    template int Connection::recvPrimitive<uint32_t>(uint32_t* var);
     template int Connection::sendPrimitive<uint64_t>(uint64_t var);
-    template int Connection::recvPrimitive<uint64_t>(uint64_t& var);
+    template int Connection::recvPrimitive<uint64_t>(uint64_t* var);
 
     /* signed integers */
     template int Connection::sendPrimitive<int8_t>(int8_t var);
-    template int Connection::recvPrimitive<int8_t>(int8_t& var);
+    template int Connection::recvPrimitive<int8_t>(int8_t* var);
     template int Connection::sendPrimitive<int16_t>(int16_t var);
-    template int Connection::recvPrimitive<int16_t>(int16_t& var);
+    template int Connection::recvPrimitive<int16_t>(int16_t* var);
     template int Connection::sendPrimitive<int32_t>(int32_t var);
-    template int Connection::recvPrimitive<int32_t>(int32_t& var);
+    template int Connection::recvPrimitive<int32_t>(int32_t* var);
     template int Connection::sendPrimitive<int64_t>(int64_t var);
-    template int Connection::recvPrimitive<int64_t>(int64_t& var);
+    template int Connection::recvPrimitive<int64_t>(int64_t* var);
 
     /* floating point numbers */
     template int Connection::sendPrimitive<float>(float var);
-    template int Connection::recvPrimitive<float>(float& var);
+    template int Connection::recvPrimitive<float>(float* var);
     template int Connection::sendPrimitive<double>(double var);
-    template int Connection::recvPrimitive<double>(double& var);
+    template int Connection::recvPrimitive<double>(double* var);
 
 
     size_t Connection::sendBuffer(char* buf, size_t len)
@@ -398,7 +404,10 @@ namespace socketscpp
 
         auto _addr = new sockaddr_in{};
         _addr->sin_family = AF_INET;
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCDFAInspection"
         ISocket::setAddr((sockaddr*) _addr);
+#pragma clang diagnostic pop
 
         socketAPI.accept = accept;
         socketAPI.connect = connect;
@@ -505,6 +514,8 @@ namespace socketscpp
 #endif
     }
 
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "OCDFAInspection"
     Connection TCPClientSocket::AcceptConnection()
     {
 #ifdef LOGURU_SUPPORT
@@ -515,5 +526,9 @@ namespace socketscpp
         return Connection();
 #endif
     }
+
+#pragma clang diagnostic pop
 }
 
+
+#pragma clang diagnostic pop
