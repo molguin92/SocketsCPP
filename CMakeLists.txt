@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.9)
-project(socketscpp VERSION 0.5.0 DESCRIPTION "OOP wrapper around C socket API.")
+project(socketscpp VERSION 0.5.1 DESCRIPTION "OOP wrapper around C socket API.")
 set(CMAKE_CXX_STANDARD 14)
 
 include(ExternalProject)
