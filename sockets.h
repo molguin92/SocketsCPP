@@ -65,10 +65,10 @@ namespace socketscpp
         // int recvInt32(int32_t& var);
 
         template<typename Prim_T>
-        int sendInteger(Prim_T var);
+        int sendPrimitive(Prim_T var);
 
         template<typename Prim_T>
-        int recvInteger(Prim_T& var);
+        int recvPrimitive(Prim_T& var);
 
         size_t sendBuffer(char* buf, size_t len);
         size_t recvBuffer(char* buf, size_t len);

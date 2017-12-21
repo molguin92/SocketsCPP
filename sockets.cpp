@@ -116,8 +116,8 @@ namespace socketscpp
     }
 
 
-    template<typename IntType>
-    int Connection::sendInteger(const IntType var)
+    template<typename PrimType>
+    int Connection::sendPrimitive(const PrimType var)
     {
 #ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection.";
@@ -125,31 +125,31 @@ namespace socketscpp
         if (!open) exit(-1);
 #endif
 
-        IntType data;
+        PrimType data;
         uint32_t total_sent = 0;
         ssize_t sent;
 
-        size_t len = sizeof(IntType);
+        size_t len = sizeof(PrimType);
         if (len > sizeof(uint8_t))
         {
             // if sending more than 1 byte
             // reverse endianness
             if (len == sizeof(uint16_t))
-                data = htobe16(var);
+                data = (PrimType) htobe16((uint16_t) var);
             else if (len == sizeof(uint32_t))
-                data = htobe32(var);
+                data = (PrimType) htobe32((uint32_t) var);
             else if (len == sizeof(uint64_t))
-                data = htobe64(var);
+                data = (PrimType) htobe64((uint64_t) var);
         }
         else
             data = var;
 
 
-        while (total_sent < sizeof(IntType))
+        while (total_sent < sizeof(PrimType))
         {
-            sent = socketAPI.send(fd, ((const char*) &data) + total_sent, sizeof(IntType) - total_sent, 0);
+            sent = socketAPI.send(fd, ((const char*) &data) + total_sent, sizeof(PrimType) - total_sent, 0);
 #ifdef LOGURU_SUPPORT
-            CHECK_NE_S(sent, -1) << "Error when trying to send integer, errno: " << strerror(errno);
+            CHECK_NE_S(sent, -1) << "Error when trying to send primitive type, errno: " << strerror(errno);
 #else
             if (-1 == sent) exit(errno);
 #endif
@@ -169,8 +169,8 @@ namespace socketscpp
         return total_sent;
     }
 
-    template<typename IntType>
-    int Connection::recvInteger(IntType& var)
+    template<typename PrimType>
+    int Connection::recvPrimitive(PrimType& var)
     {
 #ifdef LOGURU_SUPPORT
         CHECK_S(open) << "Closed connection";
@@ -180,11 +180,11 @@ namespace socketscpp
 
         uint32_t total_received = 0;
         ssize_t received;
-        IntType data;
+        PrimType data;
 
-        while (total_received < sizeof(IntType))
+        while (total_received < sizeof(PrimType))
         {
-            received = socketAPI.recv(fd, ((char*) &data) + total_received, sizeof(IntType) - total_received, 0);
+            received = socketAPI.recv(fd, ((char*) &data) + total_received, sizeof(PrimType) - total_received, 0);
 #ifdef LOGURU_SUPPORT
             CHECK_NE_S(received, -1) << "Error when trying to receive primitive type, errno: " << strerror(errno);
 #else
@@ -203,17 +203,17 @@ namespace socketscpp
             total_received += received;
         }
 
-        size_t len = sizeof(IntType);
+        size_t len = sizeof(PrimType);
         if (len > sizeof(uint8_t))
         {
             // if receiving more than 1 byte
             // reverse endianness
             if (len == sizeof(uint16_t))
-                var = be16toh(data);
+                var = (PrimType) be16toh((uint16_t) data);
             else if (len == sizeof(uint32_t))
-                var = be32toh(data);
+                var = (PrimType) be32toh((uint32_t) data);
             else if (len == sizeof(uint64_t))
-                var = be64toh(data);
+                var = (PrimType) be64toh((uint32_t) data);
         }
         else
             var = data;
@@ -222,26 +222,31 @@ namespace socketscpp
     }
 
     /* unsigned integers */
-    template int Connection::sendInteger<uint8_t>(uint8_t var);
-    template int Connection::recvInteger<uint8_t>(uint8_t& var);
-    template int Connection::sendInteger<uint16_t>(uint16_t var);
-    template int Connection::recvInteger<uint16_t>(uint16_t& var);
-    template int Connection::sendInteger<uint32_t>(uint32_t var);
-    template int Connection::recvInteger<uint32_t>(uint32_t& var);
-    template int Connection::sendInteger<uint64_t>(uint64_t var);
-    template int Connection::recvInteger<uint64_t>(uint64_t& var);
+    template int Connection::sendPrimitive<uint8_t>(uint8_t var);
+    template int Connection::recvPrimitive<uint8_t>(uint8_t& var);
+    template int Connection::sendPrimitive<uint16_t>(uint16_t var);
+    template int Connection::recvPrimitive<uint16_t>(uint16_t& var);
+    template int Connection::sendPrimitive<uint32_t>(uint32_t var);
+    template int Connection::recvPrimitive<uint32_t>(uint32_t& var);
+    template int Connection::sendPrimitive<uint64_t>(uint64_t var);
+    template int Connection::recvPrimitive<uint64_t>(uint64_t& var);
 
     /* signed integers */
-    template int Connection::sendInteger<int8_t>(int8_t var);
-    template int Connection::recvInteger<int8_t>(int8_t& var);
-    template int Connection::sendInteger<int16_t>(int16_t var);
-    template int Connection::recvInteger<int16_t>(int16_t& var);
-    template int Connection::sendInteger<int32_t>(int32_t var);
-    template int Connection::recvInteger<int32_t>(int32_t& var);
-    template int Connection::sendInteger<int64_t>(int64_t var);
-    template int Connection::recvInteger<int64_t>(int64_t& var);
+    template int Connection::sendPrimitive<int8_t>(int8_t var);
+    template int Connection::recvPrimitive<int8_t>(int8_t& var);
+    template int Connection::sendPrimitive<int16_t>(int16_t var);
+    template int Connection::recvPrimitive<int16_t>(int16_t& var);
+    template int Connection::sendPrimitive<int32_t>(int32_t var);
+    template int Connection::recvPrimitive<int32_t>(int32_t& var);
+    template int Connection::sendPrimitive<int64_t>(int64_t var);
+    template int Connection::recvPrimitive<int64_t>(int64_t& var);
 
     /* floating point numbers */
+    template int Connection::sendPrimitive<float>(float var);
+    template int Connection::recvPrimitive<float>(float& var);
+    template int Connection::sendPrimitive<double>(double var);
+    template int Connection::recvPrimitive<double>(double& var);
+
 
 
     size_t Connection::sendBuffer(char* buf, size_t len)
